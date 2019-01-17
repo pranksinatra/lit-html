@@ -30,7 +30,7 @@ if (window.navigator.userAgent.match('Trident')) {
 }
 
 export interface ClassInfo {
-  [name: string]: string|boolean|number;
+  readonly [name: string]: string|boolean|number;
 }
 
 /**
