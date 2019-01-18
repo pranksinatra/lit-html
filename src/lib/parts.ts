@@ -29,6 +29,33 @@ export const isPrimitive = (value: any) =>
      !(typeof value === 'object' || typeof value === 'function'));
 
 /**
+ * A global callback used to sanitize any value before inserting it into the
+ * DOM.
+ *
+ * `value` is the value to sanitize.
+ * `name` is the name of an attribute or property (for example, href).
+ * `type` indicates where the value is being inserted: one of property,
+ * attribute, or text. `node` is the node where the value is being inserted.
+ */
+export type DomSanitizer =
+    (value: unknown,
+     name: string,
+     type: ('property'|'attribute'),
+     node: Node) => unknown;
+
+
+/**
+ * A global callback used to sanitize any value before inserting it into the
+ * DOM.
+ */
+let sanitizeDOMValue: DomSanitizer|undefined;
+
+/** Sets the global DOM sanitization callback. */
+export function setSanitizeDOMValue(newSanitizer: DomSanitizer) {
+  sanitizeDOMValue = newSanitizer;
+}
+
+/**
  * Sets attribute values for AttributeParts, so that the value is only set once
  * even if there are multiple parts for an attribute.
  */
@@ -58,12 +85,33 @@ export class AttributeCommitter {
 
   protected _getValue(): any {
     const strings = this.strings;
+    const parts = this.parts;
     const l = strings.length - 1;
+
+    // If we're assigning an attribute via syntax like:
+    //    attr="${foo}"  or  attr=${foo}
+    // but not
+    //    attr="${foo} ${bar}" or attr="${foo} baz"
+    // then we don't want to coerce the attribute value into one long
+    // string. Instead we want to just return the value itself directly,
+    // so that sanitizeDOMValue can get the actual value rather than
+    // String(value)
+    if (l === 1 && strings[0] === '' && strings[1] === '' && parts[0]) {
+      const v = parts[0].value;
+      if (Array.isArray(v)) {
+        if (v.length === 1) {
+          return v[0];
+        }
+      } else {
+        return v;
+      }
+    }
+
     let text = '';
 
     for (let i = 0; i < l; i++) {
       text += strings[i];
-      const part = this.parts[i];
+      const part = parts[i];
       if (part !== undefined) {
         const v = part.value;
         if (v != null &&
@@ -84,7 +132,11 @@ export class AttributeCommitter {
   commit(): void {
     if (this.dirty) {
       this.dirty = false;
-      this.element.setAttribute(this.name, this._getValue());
+      let value = this._getValue();
+      if (sanitizeDOMValue) {
+        value = sanitizeDOMValue(value, this.name, 'attribute', this.element);
+      }
+      this.element.setAttribute(this.name, String(value));
     }
   }
 }
@@ -227,13 +279,24 @@ export class NodePart implements Part {
     value = value == null ? '' : value;
     if (node === this.endNode.previousSibling &&
         node.nodeType === 3 /* Node.TEXT_NODE */) {
+      if (sanitizeDOMValue) {
+        value = String(sanitizeDOMValue(value, 'data', 'property', node));
+      }
       // If we only have a single text node between the markers, we can just
       // set its value, rather than replacing it.
       // TODO(justinfagnani): Can we just check if this.value is primitive?
-      (node as Text).data = value;
+      (node as Text).data = typeof value === 'string' ? value : String(value);
     } else {
-      this._commitNode(document.createTextNode(
-          typeof value === 'string' ? value : String(value)));
+      // When setting text content, for security purposes it matters a lot what
+      // the parent is. For example, <style> and <script> need to be handled
+      // with care, while <span> does not. So first we need to put a text node
+      // into the document, then we can sanitize its contentx.
+      const textNode = document.createTextNode('');
+      this._commitNode(textNode);
+      if (sanitizeDOMValue) {
+        value = String(sanitizeDOMValue(value, 'data', 'property', textNode));
+      }
+      textNode.data = typeof value === 'string' ? value : String(value);
     }
     this.value = value;
   }
@@ -392,7 +455,11 @@ export class PropertyCommitter extends AttributeCommitter {
   commit(): void {
     if (this.dirty) {
       this.dirty = false;
-      (this.element as any)[this.name] = this._getValue();
+      let value = this._getValue();
+      if (sanitizeDOMValue) {
+        value = sanitizeDOMValue(value, this.name, 'property', this.element);
+      }
+      (this.element as any)[this.name] = value;
     }
   }
 }
