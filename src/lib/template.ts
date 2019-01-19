@@ -104,7 +104,7 @@ export class Template {
             _prepareTemplate(node as HTMLTemplateElement);
           }
         } else if (node.nodeType === 3 /* Node.TEXT_NODE */) {
-          const data = (node as Text).data!;
+          const data = (node as Text).data;
           if (data.indexOf(marker) >= 0) {
             const parent = node.parentNode!;
             const strings = data.split(markerRegex);
@@ -153,7 +153,7 @@ export class Template {
             partIndex++;
           } else {
             let i = -1;
-            while ((i = (node as Comment).data!.indexOf(marker, i + 1)) !==
+            while ((i = (node as Comment).data.indexOf(marker, i + 1)) !==
                    -1) {
               // Comment node has a binding marker inside, make an inactive part
               // The binding won't work, but subsequent bindings will

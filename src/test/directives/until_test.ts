@@ -32,13 +32,13 @@ suite('until', () => {
   });
 
   test('renders a Promise when it resolves', async () => {
-    let resolve: (v: any) => void;
+    let resolve!: (v: any) => void;
     const promise = new Promise((res, _) => {
       resolve = res;
     });
     render(html`<div>${until(promise)}</div>`, container);
     assert.equal(stripExpressionMarkers(container.innerHTML), '<div></div>');
-    resolve!('foo');
+    resolve('foo');
     await promise;
     assert.equal(stripExpressionMarkers(container.innerHTML), '<div>foo</div>');
   });
@@ -200,11 +200,11 @@ suite('until', () => {
   });
 
   test('renders racing Promises across renders correctly', async () => {
-    let resolve1: (v: any) => void;
+    let resolve1!: (v: any) => void;
     const promise1 = new Promise((res, _) => {
       resolve1 = res;
     });
-    let resolve2: (v: any) => void;
+    let resolve2!: (v: any) => void;
     const promise2 = new Promise((res, _) => {
       resolve2 = res;
     });
@@ -220,21 +220,21 @@ suite('until', () => {
     assert.equal(stripExpressionMarkers(container.innerHTML), '<div></div>');
 
     // Resolve the first Promise, should not update the container
-    resolve1!('foo');
+    resolve1('foo');
     await promise1;
     assert.equal(stripExpressionMarkers(container.innerHTML), '<div></div>');
     // Resolve the second Promise, should update the container
-    resolve2!('bar');
+    resolve2('bar');
     await promise2;
     assert.equal(stripExpressionMarkers(container.innerHTML), '<div>bar</div>');
   });
 
   test('renders Promises resolving in high-to-low priority', async () => {
-    let resolve1: (v: any) => void;
+    let resolve1!: (v: any) => void;
     const promise1 = new Promise((res, _) => {
       resolve1 = res;
     });
-    let resolve2: (v: any) => void;
+    let resolve2!: (v: any) => void;
     const promise2 = new Promise((res, _) => {
       resolve2 = res;
     });
@@ -246,22 +246,22 @@ suite('until', () => {
     assert.equal(stripExpressionMarkers(container.innerHTML), '<div></div>');
 
     // Resolve the primary Promise, updates the DOM
-    resolve1!('foo');
+    resolve1('foo');
     await promise1;
     assert.equal(stripExpressionMarkers(container.innerHTML), '<div>foo</div>');
 
     // Resolve the secondary Promise, should not update the container
-    resolve2!('bar');
+    resolve2('bar');
     await promise2;
     assert.equal(stripExpressionMarkers(container.innerHTML), '<div>foo</div>');
   });
 
   test('renders Promises resolving in low-to-high priority', async () => {
-    let resolve1: (v: any) => void;
+    let resolve1!: (v: any) => void;
     const promise1 = new Promise((res, _) => {
       resolve1 = res;
     });
-    let resolve2: (v: any) => void;
+    let resolve2!: (v: any) => void;
     const promise2 = new Promise((res, _) => {
       resolve2 = res;
     });
@@ -273,12 +273,12 @@ suite('until', () => {
     assert.equal(stripExpressionMarkers(container.innerHTML), '<div></div>');
 
     // Resolve the secondary Promise, updates the DOM
-    resolve2!('bar');
+    resolve2('bar');
     await promise2;
     assert.equal(stripExpressionMarkers(container.innerHTML), '<div>bar</div>');
 
     // Resolve the primary Promise, updates the DOM
-    resolve1!('foo');
+    resolve1('foo');
     await promise1;
     assert.equal(stripExpressionMarkers(container.innerHTML), '<div>foo</div>');
   });
@@ -302,7 +302,7 @@ suite('until', () => {
   });
 
   test('renders low-priority content when arguments change', async () => {
-    let resolve1: (v: any) => void;
+    let resolve1!: (v: any) => void;
     const promise1 = new Promise((res, _) => {
       resolve1 = res;
     });
@@ -327,18 +327,18 @@ suite('until', () => {
     await 0;
     // Low-priority renders
     assert.equal(stripExpressionMarkers(container.innerHTML), '<div>bar</div>');
-    resolve1!('foo');
+    resolve1('foo');
     await promise1;
     // High-priority renders
     assert.equal(stripExpressionMarkers(container.innerHTML), '<div>foo</div>');
   });
 
   test('renders Promises resolving after changing priority', async () => {
-    let resolve1: (v: any) => void;
+    let resolve1!: (v: any) => void;
     const promise1 = new Promise((res, _) => {
       resolve1 = res;
     });
-    let resolve2: (v: any) => void;
+    let resolve2!: (v: any) => void;
     const promise2 = new Promise((res, _) => {
       resolve2 = res;
     });
@@ -354,12 +354,12 @@ suite('until', () => {
     assert.equal(stripExpressionMarkers(container.innerHTML), '<div></div>');
 
     // Resolve the primary Promise, updates the DOM
-    resolve1!('foo');
+    resolve1('foo');
     await promise1;
     assert.equal(stripExpressionMarkers(container.innerHTML), '<div>foo</div>');
 
     // Resolve the secondary Promise, also updates the DOM
-    resolve2!('bar');
+    resolve2('bar');
     await promise2;
     assert.equal(stripExpressionMarkers(container.innerHTML), '<div>bar</div>');
   });
