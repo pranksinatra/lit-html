@@ -153,8 +153,7 @@ export class Template {
             partIndex++;
           } else {
             let i = -1;
-            while ((i = (node as Comment).data.indexOf(marker, i + 1)) !==
-                   -1) {
+            while ((i = (node as Comment).data.indexOf(marker, i + 1)) !== -1) {
               // Comment node has a binding marker inside, make an inactive part
               // The binding won't work, but subsequent bindings will
               // TODO (justinfagnani): consider whether it's even worth it to
