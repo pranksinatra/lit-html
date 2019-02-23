@@ -16,24 +16,40 @@ import filesize from 'rollup-plugin-filesize';
 import { terser } from 'rollup-plugin-terser';
 import resolve from 'rollup-plugin-node-resolve';
 import commonjs from 'rollup-plugin-commonjs';
+import multiEntry from 'rollup-plugin-multi-entry';
 
-export default {
-  input: 'lit-html.js',
-  output: [
-    { file: 'lit-html.bundled.js', format: 'esm' },
-    { file: 'lit-html.bundled.cjs.js', format: 'cjs' },
-  ],
-  plugins: [
-    terser({
-      warnings: true,
-      mangle: {
-        module: true,
-      },
-    }),
-    filesize({
-      showBrotliSize: true,
-    }),
-    resolve(), // so Rollup can find `ms`
-    commonjs(), // so Rollup can convert `ms` to an ES module
-  ],
-};
+export default [
+  {
+    input: 'lit-html.js',
+    output: { file: 'lit-html.bundled.js', format: 'esm' },
+    plugins: [
+      terser({
+        warnings: true,
+        mangle: {
+          module: true,
+        },
+      }),
+      filesize({
+        showBrotliSize: true,
+      }),
+    ],
+  },
+  {
+    input: ['lit-html.js', 'directives/*.js'],
+    output: { file: 'lit-html.bundled.cjs.js', format: 'cjs' },
+    plugins: [
+      terser({
+        warnings: true,
+        mangle: {
+          module: true,
+        },
+      }),
+      filesize({
+        showBrotliSize: true,
+      }),
+      resolve(), // so Rollup can find `ms`
+      commonjs(), // so Rollup can convert `ms` to an ES module
+      multiEntry(),
+    ],
+  },
+];
